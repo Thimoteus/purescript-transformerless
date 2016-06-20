@@ -20,7 +20,11 @@ mapState :: forall s a b. (Tuple a s -> Tuple b s) -> State s a -> State s b
 mapState f (State s) = State (f <<< s)
 
 instance functorState :: Functor (State s) where
-  map f (State s) = State \ st -> Tuple (f (fst (s st))) st
+  map f (State s) = State \ st ->
+    let res = s st
+        a = fst res
+        s' = snd res
+     in Tuple (f a) s'
 
 instance applyState :: Apply (State s) where
   apply (State ff) (State fa) = State \ s ->
@@ -65,12 +69,10 @@ get :: forall s. State s s
 get = State \ st -> Tuple st st
 
 gets :: forall s a. (s -> a) -> State s a
-gets f = f <$> get
+gets f = State \ st -> Tuple (f st) st--f <$> get
 
 put :: forall s. s -> State s Unit
 put s = State \ _ -> Tuple unit s
 
 modify :: forall s. (s -> s) -> State s Unit
-modify f = do --put <<< f =<< get
-  s <- get
-  put (f s)
+modify f = State \ s -> Tuple unit (f s)

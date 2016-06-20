@@ -31,11 +31,11 @@ loopState n = tailRecM go n where
 testRWS :: forall e. Eff (console :: CONSOLE | e) Unit
 testRWS = do
   t1 <- t
-  res1 <- pure $ RWS.runRWS (loop 1000000) "" 0
+  res1 <- pure $ RWS.runRWS (loop 10000000) "" 0
   t2 <- t
   log $ "RWS: " <> show (t2 - t1)
   t3 <- t
-  res2 <- pure $ State.execState (loopState 1000000) 0
+  res2 <- pure $ State.execState (loopState 10000000) 0
   t4 <- t
   log $ "State: " <> show (t4 - t3)
 

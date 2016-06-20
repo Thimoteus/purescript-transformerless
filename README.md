@@ -13,7 +13,7 @@ remember reading something like the following:
 > The StateT/ReaderT/WriterT monad transformer is ...
 >
 > In fact, the State/Reader/Writer monad from section {3 lines ago} is actually
-defined as StateT s Identity a/ReaderT r Identity/WriterT w Identity!
+defined as StateT s Identity/ReaderT r Identity/WriterT w Identity!
 
 Wow, what a plot twist!
 
