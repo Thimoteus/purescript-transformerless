@@ -31,26 +31,58 @@ depend on a package called "transformers"?
 As a result, a "transformers" typeclass function is just a normal function in
 the transformerless counterpart's module.
 
+## Scrap Your Typeclasses
+
+Each module also exports normal functions corresponding to typeclass members for
+each typeclass instance in the module.
+
+`Control.Monad.Transformerless.Reader` exports `mapR, applyR, pureR, bindR`
+as well as infix aliases `|->, ~, >>-` for `mapR, applyR, bindR` respectively.
+
+`Writer` and `State` are similar, but `RWS` exports `map_, apply_, pure_, bind_`.
+However, the aliases are the same in each module.
+
+Using these instead of their overloaded versions avoids passing typeclass
+dictionaries, and could result in a speedup.
+
 ## Questions I'll Ask and Answer for You
 
 ### You mentioned code generation. Is it really better for this package?
 
 Examples:
 
-Generating code for this:
+Generating code for this transformers code:
 ```purescript
-loop :: Int -> RWS String (Array String) Int Unit
-loop n = tailRecM go n where
+loop :: Int -> RWST String (Array String) Int Identity Unit
+loop n = tailRecM go n
+  where
+  go 0 = do
+    tell [ "Done!" ]
+    pure (Right unit)
+  go n = do
+    x <- get
+    put (x + 1)
+    pure (Left (n - 1))
+```
+
+vs this transformerless code:
+```purescript
+loop :: Int -> RWS.RWS String (Array String) Int Unit
+loop n = RWS.tailRec_ go n where
   go 0 = do
     RWS.tell ["Done!"]
     pure (Right unit)
+      where
+        bind = RWS.bind_
   go n = do
     x <- RWS.get
     RWS.put (x + 1)
     pure (Left (n - 1))
+      where
+        bind = RWS.bind_
 ```
 
-with transformers:
+results in this javascript for transformers:
 ```javascript
 var loop = function (n) {
     var go = function (v) {
@@ -69,32 +101,33 @@ var loop = function (n) {
 };
 ```
 
-without transformers:
+and this javascript without transformers:
 ```javascript
 var loop = function (n) {
     var go = function (v) {
         if (v === 0) {
-            return Control_Bind.bind(Control_Monad_Transformerless_RWS.bindRWS(Data_Semigroup.semigroupArray))(Control_Monad_Transformerless_RWS.tell([ "Done!" ]))(function () {
+            return Control_Monad_Transformerless_RWS.bind_(Data_Semigroup.semigroupArray)(Control_Monad_Transformerless_RWS.tell([ "Done!" ]))(function () {
                 return Control_Applicative.pure(Control_Monad_Transformerless_RWS.applicativeRWS(Data_Monoid.monoidArray))(new Data_Either.Right(Data_Unit.unit));
             });
         };
-        return Control_Bind.bind(Control_Monad_Transformerless_RWS.bindRWS(Data_Semigroup.semigroupArray))(Control_Monad_Transformerless_RWS.get(Data_Monoid.monoidArray))(function (v1) {
-            return Control_Bind.bind(Control_Monad_Transformerless_RWS.bindRWS(Data_Semigroup.semigroupArray))(Control_Monad_Transformerless_RWS.put(Data_Monoid.monoidArray)(v1 + 1 | 0))(function () {
+        return Control_Monad_Transformerless_RWS.bind_(Data_Semigroup.semigroupArray)(Control_Monad_Transformerless_RWS.get(Data_Monoid.monoidArray))(function (v1) {
+            return Control_Monad_Transformerless_RWS.bind_(Data_Semigroup.semigroupArray)(Control_Monad_Transformerless_RWS.put(Data_Monoid.monoidArray)(v1 + 1 | 0))(function () {
                 return Control_Applicative.pure(Control_Monad_Transformerless_RWS.applicativeRWS(Data_Monoid.monoidArray))(new Data_Either.Left(v - 1));
             });
         });
     };
-    return Control_Monad_Rec_Class.tailRecM(Control_Monad_Transformerless_RWS.monadRecRWS(Data_Monoid.monoidArray))(go)(n);
+    return Control_Monad_Transformerless_RWS.tailRec_(Data_Monoid.monoidArray)(go)(n);
 };
 ```
 
-### And what about speed?
+### What about speed?
 
-On my computer, testing the above `loop` function (which is duplicated both on the
-transformers repo and this one). The transformerless version is on the left, and
+On my computer, testing the above `loop` functions 10,000,000 times. The transformerless version is on the right, and
 timing the `loop` function is labeled "RWS". The transformer version is labeled "RWST":
 
-![test](http://i.imgur.com/oL8Nqhg.png)
+![test](http://i.imgur.com/SJaqi4U.png)
+
+And if you can't read my tiny terminal font, it says `RWST: 61348.0` and `RWS: 25806.0`.
 
 ## Installing
 `bower i purescript-transformerless`
