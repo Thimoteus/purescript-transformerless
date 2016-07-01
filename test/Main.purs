@@ -5,28 +5,33 @@ import Control.Monad.Transformerless.RWS as RWS
 import Control.Monad.Transformerless.State as State
 import Control.Monad.Transformerless.Reader as Reader
 import Control.Monad.Transformerless.Writer as Writer
-import Control.Monad.Rec.Class (tailRecM)
 
 foreign import t :: forall eff. Eff eff Number
 
 loop :: Int -> RWS.RWS String (Array String) Int Unit
-loop n = tailRecM go n where
+loop n = RWS.tailRec_ go n where
   go 0 = do
     RWS.tell ["Done!"]
     pure (Right unit)
+      where
+        bind = RWS.bind_
   go n = do
     x <- RWS.get
     RWS.put (x + 1)
     pure (Left (n - 1))
+      where
+        bind = RWS.bind_
 
 loopState :: Int -> State.State Int Unit
-loopState n = tailRecM go n where
+loopState n = State.tailRecS go n where
   go 0 = do
     pure (Right unit)
   go n = do
     x <- State.get
     State.put (x + 1)
     pure (Left (n - 1))
+      where
+        bind = State.bindS
 
 testRWS :: forall e. Eff (console :: CONSOLE | e) Unit
 testRWS = do
@@ -57,6 +62,8 @@ stateTest = do
   incState
   incState
   pure "Done"
+    where
+      bind = State.bindS
 
 testState :: forall e. Eff (console :: CONSOLE | e) Unit
 testState = case State.runState stateTest 0 of
@@ -68,6 +75,8 @@ writerTest :: Writer.Writer String Int
 writerTest = do
   Writer.tell "Hello from writerTest"
   pure 42
+    where
+      bind = Writer.bindW
 
 testWriter :: forall e. Eff (console :: CONSOLE | e) Unit
 testWriter = case Writer.runWriter writerTest of

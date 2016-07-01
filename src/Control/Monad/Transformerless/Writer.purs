@@ -13,6 +13,28 @@ execWriter (Writer (Tuple _ w)) = w
 mapWriter :: forall w1 w2 a b. (Tuple a w1 -> Tuple b w2) -> Writer w1 a -> Writer w2 b
 mapWriter f (Writer t) = Writer (f t)
 
+mapW :: forall w a b. (a -> b) -> Writer w a -> Writer w b
+mapW f (Writer (Tuple a w)) = Writer (Tuple (f a) w)
+
+infixl 4 mapW as |->
+
+applyW :: forall w a b. Semigroup w => Writer w (a -> b) -> Writer w a -> Writer w b
+applyW (Writer (Tuple f w1)) (Writer (Tuple a w2)) = Writer (Tuple (f a) (w1 <> w2))
+
+infixl 4 applyW as ~
+
+pureW :: forall w a. Monoid w => a -> Writer w a
+pureW a = Writer (Tuple a mempty)
+
+bindW :: forall w a b. Semigroup w => Writer w a -> (a -> Writer w b) -> Writer w b
+bindW (Writer (Tuple a w)) k =
+  let res = runWriter (k a)
+      a' = fst res
+      w' = snd res
+   in Writer (Tuple a' (w <> w'))
+
+infixl 1 bindW as >>-
+
 instance functorWriter :: Functor (Writer w) where
   map f (Writer (Tuple a w)) = Writer (Tuple (f a) w)
 
@@ -47,3 +69,5 @@ censor :: forall w a. Monoid w => (w -> w) -> Writer w a -> Writer w a
 censor f m = pass do
   a <- m
   pure (Tuple a f)
+    where
+      bind = bindW

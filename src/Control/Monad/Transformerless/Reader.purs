@@ -13,8 +13,23 @@ withReader f (Reader r1) = Reader (r1 <<< f)
 mapReader :: forall r a b. (a -> b) -> Reader r a -> Reader r b
 mapReader f (Reader a) = Reader (f <<< a)
 
+infixl 4 mapReader as |->
+
+applyR :: forall r a b. Reader r (a -> b) -> Reader r a -> Reader r b
+applyR (Reader f) (Reader a) = Reader \ r -> f r (a r)
+
+infixl 4 applyR as ~
+
+pureR :: forall r a. a -> Reader r a
+pureR a = Reader \ _ -> a
+
+bindR :: forall r a b. Reader r a -> (a -> Reader r b) -> Reader r b
+bindR (Reader a) k = Reader \ r -> runReader (k (a r)) r
+
+infixl 1 bindR as >>-
+
 instance functorReader :: Functor (Reader r) where
-  map = mapReader
+  map f (Reader a) = Reader (f <<< a)
 
 instance applyReader :: Apply (Reader r) where
   apply (Reader f) (Reader a) = Reader \ r -> f r (a r)

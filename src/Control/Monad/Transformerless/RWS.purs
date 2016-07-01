@@ -6,6 +6,11 @@ module Control.Monad.Transformerless.RWS
   , execRWS
   , mapRWS
   , withRWS
+  , map_, (|->)
+  , apply_, (~)
+  , pure_
+  , bind_, (>>-)
+  , tailRec_
   -- Reader
   , reader
   , ask
@@ -60,6 +65,57 @@ mapRWS f (RWS g) = RWS \ r s -> f (g r s)
 
 withRWS :: forall r1 r2 w s a. (r2 -> s -> Tuple r1 s) -> RWS r1 w s a -> RWS r2 w s a
 withRWS f (RWS g) = RWS \ r2 s -> uncurry g (f r2 s)
+
+map_ :: forall r w s a b. (a -> b) -> RWS r w s a -> RWS r w s b
+map_ f (RWS g) = RWS \ r s ->
+  let res = g r s
+   in RWSResult (rwstate res) (f (resultws res)) (rwriters res)
+
+infixl 4 map_ as |->
+
+apply_ :: forall r w s a b. Semigroup w => RWS r w s (a -> b) -> RWS r w s a -> RWS r w s b
+apply_ (RWS ff) (RWS fa) = RWS \ r s ->
+  let res = ff r s
+      f = resultws res
+      s' = rwstate res
+      w' = rwriters res
+      res' = fa r s'
+      a = resultws res'
+      b = f a
+      s'' = rwstate res'
+      w'' = w' <> rwriters res'
+   in RWSResult s'' b w''
+
+infixl 4 apply_ as ~
+
+pure_ :: forall r w s a. Monoid w => a -> RWS r w s a
+pure_ a = RWS \ r s -> RWSResult s a mempty
+
+bind_ :: forall r w s a b. Semigroup w => RWS r w s a -> (a -> RWS r w s b) -> RWS r w s b
+bind_ (RWS fa) k = RWS \ r s ->
+  let res = fa r s
+      a = resultws res
+      s' = rwstate res
+      w' = rwriters res
+      res' = runRWS (k a) r s'
+      s'' = rwstate res'
+      w'' = w' <> rwriters res'
+      b = resultws res'
+   in RWSResult s'' b w''
+
+infixl 1 bind_ as >>-
+
+tailRec_ :: forall r w s a b. Monoid w => (a -> RWS r w s (Either a b)) -> a -> RWS r w s b
+tailRec_ f a = RWS \ r s -> tailRec (k' r) (RWSResult s a mempty)
+  where
+  k' r (RWSResult st res wr) =
+    let result = runRWS (f res) r st
+        res' = resultws result
+        st' = rwstate result
+        wr' = rwriters result
+     in case res' of
+             Left a -> Left (RWSResult st' a (wr <> wr'))
+             Right b -> Right (RWSResult st' b (wr <> wr'))
 
 instance functorRWS :: Functor (RWS r w s) where
   map f (RWS g) = RWS \ r s ->
@@ -154,7 +210,9 @@ listens f (RWS g) = RWS \ r s ->
 censor :: forall r w s a. Monoid w => (w -> w) -> RWS r w s a -> RWS r w s a
 censor f m = pass do
   a <- m
-  pure (Tuple a f)
+  pure_ (Tuple a f)
+    where
+      bind = bind_
 
 -- | State
 
@@ -166,10 +224,10 @@ get :: forall r w s. Monoid w => RWS r w s s
 get = RWS \ r s -> RWSResult s s mempty
 
 gets :: forall r w s a. Monoid w => (s -> a) -> RWS r w s a
-gets f = f <$> get
+gets f = f |-> get
 
 put :: forall r w s. Monoid w => s -> RWS r w s Unit
 put s = RWS \ r _ -> RWSResult s unit mempty
 
 modify :: forall r w s. Monoid w => (s -> s) -> RWS r w s Unit
-modify f = put <<< f =<< get
+modify f = get >>- put <<< f

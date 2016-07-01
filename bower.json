@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "purescript-console": "^1.0.0",
-    "purescript-psci-support": "^1.0.0"
+    "purescript-psci-support": "^1.0.0",
+    "purescript-quickcheck-laws": "^1.0.0"
   }
 }
