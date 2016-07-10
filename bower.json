@@ -1,10 +1,10 @@
 {
   "name": "purescript-transformerless",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "MIT",
-  "repository": {                                                          
-    "type": "git",                                                         
-    "url": "git://github.com/thimoteus/purescript-transformerless.git"            
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/thimoteus/purescript-transformerless.git"
   },
   "ignore": [
     "**/.*",
