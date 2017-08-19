@@ -1,6 +1,6 @@
 module Control.Monad.Transformerless.Reader where
 
-import Base
+import Prelude
 
 newtype Reader r a = Reader (r -> a)
 

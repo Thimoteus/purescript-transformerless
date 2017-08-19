@@ -1,10 +1,15 @@
 module Test.Main where
 
-import Base
+import Prelude
+
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (CONSOLE, log, logShow)
+import Control.Monad.Rec.Class (Step(..))
 import Control.Monad.Transformerless.RWS as RWS
-import Control.Monad.Transformerless.State as State
 import Control.Monad.Transformerless.Reader as Reader
+import Control.Monad.Transformerless.State as State
 import Control.Monad.Transformerless.Writer as Writer
+import Data.Tuple (Tuple(..))
 
 foreign import t :: forall eff. Eff eff Number
 
@@ -12,35 +17,34 @@ loop :: Int -> RWS.RWS String (Array String) Int Unit
 loop n = RWS.tailRec_ go n where
   go 0 = do
     RWS.tell ["Done!"]
-    pure (Right unit)
+    RWS.pure_ (Done unit)
       where
         bind = RWS.bind_
-  go n = do
+  go m = do
     x <- RWS.get
     RWS.put (x + 1)
-    pure (Left (n - 1))
+    RWS.pure_ (Loop (m - 1))
       where
         bind = RWS.bind_
 
 loopState :: Int -> State.State Int Unit
 loopState n = State.tailRecS go n where
-  go 0 = do
-    pure (Right unit)
-  go n = do
+  go 0 = State.pureS (Done unit)
+  go m = do
     x <- State.get
     State.put (x + 1)
-    pure (Left (n - 1))
+    State.pureS (Loop (m - 1))
       where
         bind = State.bindS
 
 testRWS :: forall e. Eff (console :: CONSOLE | e) Unit
 testRWS = do
   t1 <- t
-  res1 <- pure $ RWS.runRWS (loop 10000000) "" 0
+  let res1 = RWS.runRWS (loop 10000000) "" 0
   t2 <- t
   log $ "RWS: " <> show (t2 - t1)
   t3 <- t
-  res2 <- pure $ State.execState (loopState 10000000) 0
+  let res2 = State.execState (loopState 10000000) 0
   t4 <- t
   log $ "State: " <> show (t4 - t3)
 

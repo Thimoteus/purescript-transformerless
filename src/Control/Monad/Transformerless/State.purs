@@ -1,9 +1,10 @@
 module Control.Monad.Transformerless.State where
 
-import Base
+import Prelude
 
 import Control.Lazy (class Lazy)
-import Control.Monad.Rec.Class (class MonadRec, tailRec)
+import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRec)
+import Data.Tuple (Tuple(..), fst, snd)
 
 newtype State s a = State (s -> Tuple a s)
 
@@ -21,21 +22,15 @@ mapState f (State s) = State (f <<< s)
 
 mapS :: forall s a b. (a -> b) -> State s a -> State s b
 mapS f (State s) = State \ st ->
-  let res = s st
-      a = fst res
-      s' = snd res
+  let Tuple a s' = s st
    in Tuple (f a) s'
 
 infixl 4 mapS as |->
 
 applyS :: forall s a b. State s (a -> b) -> State s a -> State s b
 applyS (State ff) (State fa) = State \ s ->
-  let res = ff s
-      f = fst res
-      s' = snd res
-      res' = fa s'
-      a = fst res'
-      s'' = snd res'
+  let Tuple f s' = ff s
+      Tuple a s'' = fa s'
    in Tuple (f a) s''
 
 infixl 4 applyS as ~
@@ -45,12 +40,8 @@ pureS a = State (Tuple a)
 
 bindS :: forall s a b. State s a -> (a -> State s b) -> State s b
 bindS (State fa) k = State \ s ->
-  let res = fa s
-      a = fst res
-      s' = snd res
-      res' = runState (k a) s'
-      b = fst res'
-      s'' = snd res'
+  let Tuple a s' = fa s
+      Tuple b s'' = runState (k a) s'
    in Tuple b s''
 
 infixl 1 bindS as >>-
@@ -58,32 +49,24 @@ infixl 1 bindS as >>-
 deferS :: forall s a. (Unit -> State s a) -> State s a
 deferS f = State (runState (f unit))
 
-tailRecS :: forall s a b. (a -> State s (Either a b)) -> a -> State s b
+tailRecS :: forall s a b. (a -> State s (Step a b)) -> a -> State s b
 tailRecS f a = State \ s -> tailRec f' (Tuple a s)
   where
-  f' (Tuple a s) =
-    let res = runState (f a) s
-        m = fst res
-        s1 = snd res
+  f' (Tuple x s) =
+    let Tuple m s1 = runState (f x) s
      in case m of
-         Left l -> Left (Tuple l s1)
-         Right r -> Right (Tuple r s1)
+         Loop l -> Loop (Tuple l s1)
+         Done r -> Done (Tuple r s1)
 
 instance functorState :: Functor (State s) where
   map f (State s) = State \ st ->
-    let res = s st
-        a = fst res
-        s' = snd res
+    let Tuple a s' = s st
      in Tuple (f a) s'
 
 instance applyState :: Apply (State s) where
   apply (State ff) (State fa) = State \ s ->
-    let res = ff s
-        f = fst res
-        s' = snd res
-        res' = fa s'
-        a = fst res'
-        s'' = snd res'
+    let Tuple f s' = ff s
+        Tuple a s'' = fa s'
      in Tuple (f a) s''
 
 instance applicativeState :: Applicative (State s) where
@@ -91,12 +74,8 @@ instance applicativeState :: Applicative (State s) where
 
 instance bindState :: Bind (State s) where
   bind (State fa) k = State \ s ->
-    let res = fa s
-        a = fst res
-        s' = snd res
-        res' = runState (k a) s'
-        b = fst res'
-        s'' = snd res'
+    let Tuple a s' = fa s
+        Tuple b s'' = runState (k a) s'
      in Tuple b s''
 
 instance monadState :: Monad (State s)
@@ -107,13 +86,11 @@ instance lazyState :: Lazy (State s a) where
 instance monadrecState :: MonadRec (State s) where
   tailRecM f a = State \ s -> tailRec f' (Tuple a s)
     where
-    f' (Tuple a s) =
-      let res = runState (f a) s
-          m = fst res
-          s1 = snd res
+    f' (Tuple x s) =
+      let Tuple m s1 = runState (f x) s
        in case m of
-           Left l -> Left (Tuple l s1)
-           Right r -> Right (Tuple r s1)
+           Loop l -> Loop (Tuple l s1)
+           Done r -> Done (Tuple r s1)
 
 get :: forall s. State s s
 get = State \ st -> Tuple st st

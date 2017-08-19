@@ -30,9 +30,11 @@ module Control.Monad.Transformerless.RWS
   , modify
   ) where
 
-import Base
+import Prelude
 
-import Control.Monad.Rec.Class (class MonadRec, tailRec)
+import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRec)
+import Data.Monoid (class Monoid, mempty)
+import Data.Tuple (Tuple(..), fst, snd, uncurry)
 
 data RWSResult s a w = RWSResult s a w
 
@@ -105,7 +107,7 @@ bind_ (RWS fa) k = RWS \ r s ->
 
 infixl 1 bind_ as >>-
 
-tailRec_ :: forall r w s a b. Monoid w => (a -> RWS r w s (Either a b)) -> a -> RWS r w s b
+tailRec_ :: forall r w s a b. Monoid w => (a -> RWS r w s (Step a b)) -> a -> RWS r w s b
 tailRec_ f a = RWS \ r s -> tailRec (k' r) (RWSResult s a mempty)
   where
   k' r (RWSResult st res wr) =
@@ -114,8 +116,8 @@ tailRec_ f a = RWS \ r s -> tailRec (k' r) (RWSResult s a mempty)
         st' = rwstate result
         wr' = rwriters result
      in case res' of
-             Left a -> Left (RWSResult st' a (wr <> wr'))
-             Right b -> Right (RWSResult st' b (wr <> wr'))
+             Loop x -> Loop (RWSResult st' x (wr <> wr'))
+             Done y -> Done (RWSResult st' y (wr <> wr'))
 
 instance functorRWS :: Functor (RWS r w s) where
   map f (RWS g) = RWS \ r s ->
@@ -161,8 +163,8 @@ instance monadRecRWS :: Monoid w => MonadRec (RWS r w s) where
           st' = rwstate result
           wr' = rwriters result
        in case res' of
-               Left a -> Left (RWSResult st' a (wr <> wr'))
-               Right b -> Right (RWSResult st' b (wr <> wr'))
+               Loop x -> Loop (RWSResult st' x (wr <> wr'))
+               Done y -> Done (RWSResult st' y (wr <> wr'))
 
 -- | Reader
 

@@ -22,8 +22,8 @@ Purescripters that transformer stacks are slow and generate some funky Javascrip
 
 ## Usage
 
-The same as a normal `State`, `Reader`, etc. monad. However, you should know that
-none of these monads have instances for their respective transformer counterparts:
+The same as a normal `State`, `Reader`, etc. However, you should know that
+none of these types have instances for their respective transformer counterparts:
 there is no instance for `..State.Class.MonadState s (..Transformerless.State s)`
 or its buddies. Wouldn't it be weird for a package called "transformerless" to
 depend on a package called "transformers"?
@@ -65,35 +65,19 @@ loop n = tailRecM go n
     pure (Left (n - 1))
 ```
 
-vs this transformerless code:
-```purescript
-loop :: Int -> RWS.RWS String (Array String) Int Unit
-loop n = RWS.tailRec_ go n where
-  go 0 = do
-    RWS.tell ["Done!"]
-    pure (Right unit)
-      where
-        bind = RWS.bind_
-  go n = do
-    x <- RWS.get
-    RWS.put (x + 1)
-    pure (Left (n - 1))
-      where
-        bind = RWS.bind_
-```
+results in this javascript:
 
-results in this javascript for transformers:
 ```javascript
 var loop = function (n) {
     var go = function (v) {
         if (v === 0) {
-            return Control_Bind.bind(Control_Monad_RWS_Trans.bindRWST(Data_Identity.bindIdentity)(Data_Monoid.monoidArray))(Control_Monad_Writer_Class.tell(Control_Monad_RWS_Trans.monadWriterRWST(Data_Identity.monadIdentity)(Data_Monoid.monoidArray))([ "Done!" ]))(function () {
-                return Control_Applicative.pure(Control_Monad_RWS_Trans.applicativeRWST(Data_Identity.monadIdentity)(Data_Monoid.monoidArray))(new Data_Either.Right(Data_Unit.unit));
+            return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_RWS_Trans.bindRWST(Data_Identity.bindIdentity)(Data_Monoid.monoidArray))(Control_Monad_Writer_Class.tell(Control_Monad_RWS_Trans.monadTellRWST(Data_Identity.monadIdentity)(Data_Monoid.monoidArray))([ "Done!" ]))(function () {
+                return Control_Applicative.pure(Control_Monad_RWS_Trans.applicativeRWST(Data_Identity.monadIdentity)(Data_Monoid.monoidArray))(new Control_Monad_Rec_Class.Done(Data_Unit.unit));
             });
         };
         return Control_Bind.bind(Control_Monad_RWS_Trans.bindRWST(Data_Identity.bindIdentity)(Data_Monoid.monoidArray))(Control_Monad_State_Class.get(Control_Monad_RWS_Trans.monadStateRWST(Data_Identity.monadIdentity)(Data_Monoid.monoidArray)))(function (v1) {
-            return Control_Bind.bind(Control_Monad_RWS_Trans.bindRWST(Data_Identity.bindIdentity)(Data_Monoid.monoidArray))(Control_Monad_State_Class.put(Control_Monad_RWS_Trans.monadStateRWST(Data_Identity.monadIdentity)(Data_Monoid.monoidArray))(v1 + 1 | 0))(function () {
-                return Control_Applicative.pure(Control_Monad_RWS_Trans.applicativeRWST(Data_Identity.monadIdentity)(Data_Monoid.monoidArray))(new Data_Either.Left(v - 1));
+            return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_RWS_Trans.bindRWST(Data_Identity.bindIdentity)(Data_Monoid.monoidArray))(Control_Monad_State_Class.put(Control_Monad_RWS_Trans.monadStateRWST(Data_Identity.monadIdentity)(Data_Monoid.monoidArray))(v1 + 1 | 0))(function () {
+                return Control_Applicative.pure(Control_Monad_RWS_Trans.applicativeRWST(Data_Identity.monadIdentity)(Data_Monoid.monoidArray))(new Control_Monad_Rec_Class.Loop(v - 1 | 0));
             });
         });
     };
@@ -101,18 +85,35 @@ var loop = function (n) {
 };
 ```
 
-and this javascript without transformers:
+vs this transformerless code:
+```purescript
+loop :: Int -> RWS.RWS String (Array String) Int Unit
+loop n = RWS.tailRec_ go n where
+  go 0 = do
+    RWS.tell ["Done!"]
+    RWS.pure_ (Done unit)
+      where
+        bind = RWS.bind_
+  go m = do
+    x <- RWS.get
+    RWS.put (x + 1)
+    RWS.pure_ (Loop (m - 1))
+      where
+        bind = RWS.bind_
+```
+
+with this javascript:
 ```javascript
 var loop = function (n) {
     var go = function (v) {
         if (v === 0) {
-            return Control_Monad_Transformerless_RWS.bind_(Data_Semigroup.semigroupArray)(Control_Monad_Transformerless_RWS.tell([ "Done!" ]))(function () {
-                return Control_Applicative.pure(Control_Monad_Transformerless_RWS.applicativeRWS(Data_Monoid.monoidArray))(new Data_Either.Right(Data_Unit.unit));
+            return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Transformerless_RWS.bindRWS(Data_Semigroup.semigroupArray))(Control_Monad_Transformerless_RWS.tell([ "Done!" ]))(function () {
+                return Control_Monad_Transformerless_RWS.pure_(Data_Monoid.monoidArray)(new Control_Monad_Rec_Class.Done(Data_Unit.unit));
             });
         };
         return Control_Monad_Transformerless_RWS.bind_(Data_Semigroup.semigroupArray)(Control_Monad_Transformerless_RWS.get(Data_Monoid.monoidArray))(function (v1) {
-            return Control_Monad_Transformerless_RWS.bind_(Data_Semigroup.semigroupArray)(Control_Monad_Transformerless_RWS.put(Data_Monoid.monoidArray)(v1 + 1 | 0))(function () {
-                return Control_Applicative.pure(Control_Monad_Transformerless_RWS.applicativeRWS(Data_Monoid.monoidArray))(new Data_Either.Left(v - 1));
+            return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Transformerless_RWS.bindRWS(Data_Semigroup.semigroupArray))(Control_Monad_Transformerless_RWS.put(Data_Monoid.monoidArray)(v1 + 1 | 0))(function () {
+                return Control_Monad_Transformerless_RWS.pure_(Data_Monoid.monoidArray)(new Control_Monad_Rec_Class.Loop(v - 1 | 0));
             });
         });
     };
@@ -125,9 +126,9 @@ var loop = function (n) {
 On my computer, testing the above `loop` functions 10,000,000 times. The transformerless version is on the right, and
 timing the `loop` function is labeled "RWS". The transformer version is labeled "RWST":
 
-![test](http://i.imgur.com/SJaqi4U.png)
+![test](http://i.imgur.com/Fww56is.png)
 
-And if you can't read my tiny terminal font, it says `RWST: 61348.0` and `RWS: 25806.0`.
+And if you can't read my font, it says `RWST: 38929.0` and `RWS: 15048.0`.
 
 ## Installing
 `bower i purescript-transformerless`
