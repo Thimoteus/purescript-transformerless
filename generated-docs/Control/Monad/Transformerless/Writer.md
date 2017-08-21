@@ -9,6 +9,7 @@ newtype Writer w a
 
 ##### Instances
 ``` purescript
+Newtype (Writer w a) _
 Functor (Writer w)
 (Semigroup w) => Apply (Writer w)
 (Monoid w) => Applicative (Writer w)

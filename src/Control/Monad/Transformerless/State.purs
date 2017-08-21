@@ -4,9 +4,12 @@ import Prelude
 
 import Control.Lazy (class Lazy)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRec)
+import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..), fst, snd)
 
 newtype State s a = State (s -> Tuple a s)
+
+derive instance newtypeState :: Newtype (State s a) _
 
 runState :: forall s a. State s a -> s -> Tuple a s
 runState (State s) = s
@@ -59,20 +62,24 @@ tailRecS f a = State \ s -> tailRec f' (Tuple a s)
          Done r -> Done (Tuple r s1)
 
 instance functorState :: Functor (State s) where
+  map :: forall a b. (a -> b) -> State s a -> State s b
   map f (State s) = State \ st ->
     let Tuple a s' = s st
      in Tuple (f a) s'
 
 instance applyState :: Apply (State s) where
+  apply :: forall a b. State s (a -> b) -> State s a -> State s b
   apply (State ff) (State fa) = State \ s ->
     let Tuple f s' = ff s
         Tuple a s'' = fa s'
      in Tuple (f a) s''
 
 instance applicativeState :: Applicative (State s) where
+  pure :: forall a. a -> State s a
   pure a = State (Tuple a)
 
 instance bindState :: Bind (State s) where
+  bind :: forall a b. State s a -> (a -> State s b) -> State s b
   bind (State fa) k = State \ s ->
     let Tuple a s' = fa s
         Tuple b s'' = runState (k a) s'
@@ -81,9 +88,11 @@ instance bindState :: Bind (State s) where
 instance monadState :: Monad (State s)
 
 instance lazyState :: Lazy (State s a) where
+  defer :: (Unit -> State s a) -> State s a
   defer f = State (runState (f unit))
 
 instance monadrecState :: MonadRec (State s) where
+  tailRecM :: forall a b. (a -> State s (Step a b)) -> a -> State s b
   tailRecM f a = State \ s -> tailRec f' (Tuple a s)
     where
     f' (Tuple x s) =

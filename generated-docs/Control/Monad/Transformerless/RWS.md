@@ -16,6 +16,7 @@ newtype RWS r w s a
 
 ##### Instances
 ``` purescript
+Newtype (RWS r w s a) _
 Functor (RWS r w s)
 (Semigroup w) => Apply (RWS r w s)
 (Monoid w) => Applicative (RWS r w s)
@@ -99,7 +100,7 @@ infixl 1 bind_ as >>-
 #### `tailRec_`
 
 ``` purescript
-tailRec_ :: forall r w s a b. Monoid w => (a -> RWS r w s (Either a b)) -> a -> RWS r w s b
+tailRec_ :: forall r w s a b. Monoid w => (a -> RWS r w s (Step a b)) -> a -> RWS r w s b
 ```
 
 #### `reader`

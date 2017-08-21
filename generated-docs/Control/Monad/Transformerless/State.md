@@ -9,6 +9,7 @@ newtype State s a
 
 ##### Instances
 ``` purescript
+Newtype (State s a) _
 Functor (State s)
 Apply (State s)
 Applicative (State s)
@@ -93,7 +94,7 @@ deferS :: forall s a. (Unit -> State s a) -> State s a
 #### `tailRecS`
 
 ``` purescript
-tailRecS :: forall s a b. (a -> State s (Either a b)) -> a -> State s b
+tailRecS :: forall s a b. (a -> State s (Step a b)) -> a -> State s b
 ```
 
 #### `get`

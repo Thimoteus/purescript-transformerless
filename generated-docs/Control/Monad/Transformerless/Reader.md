@@ -9,6 +9,7 @@ newtype Reader r a
 
 ##### Instances
 ``` purescript
+Newtype (Reader r a) _
 Functor (Reader r)
 Apply (Reader r)
 Applicative (Reader r)

@@ -3,9 +3,12 @@ module Control.Monad.Transformerless.Writer where
 import Prelude
 
 import Data.Monoid (class Monoid, mempty)
+import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(Tuple))
 
 newtype Writer w a = Writer (Tuple a w)
+
+derive instance newtypeWriter :: Newtype (Writer w a) _
 
 runWriter :: forall w a. Writer w a -> Tuple a w
 runWriter (Writer t) = t
@@ -37,15 +40,19 @@ bindW (Writer (Tuple a w)) k =
 infixl 1 bindW as >>-
 
 instance functorWriter :: Functor (Writer w) where
+  map :: forall a b. (a -> b) -> Writer w a -> Writer w b
   map f (Writer (Tuple a w)) = Writer (Tuple (f a) w)
 
 instance applyWriter :: Semigroup w => Apply (Writer w) where
+  apply :: forall a b. Writer w (a -> b) -> Writer w a -> Writer w b
   apply (Writer (Tuple f w1)) (Writer (Tuple a w2)) = Writer (Tuple (f a) (w1 <> w2))
 
 instance applicativeWriter :: Monoid w => Applicative (Writer w) where
+  pure :: forall a. a -> Writer w a
   pure a = Writer (Tuple a mempty)
 
 instance bindWriter :: Semigroup w => Bind (Writer w) where
+  bind :: forall a b. Writer w a -> (a -> Writer w b) -> Writer w b
   bind (Writer (Tuple a w)) k =
     let Tuple a' w' = runWriter (k a)
      in Writer (Tuple a' (w <> w'))

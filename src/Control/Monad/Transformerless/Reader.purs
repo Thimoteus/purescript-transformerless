@@ -2,7 +2,11 @@ module Control.Monad.Transformerless.Reader where
 
 import Prelude
 
+import Data.Newtype (class Newtype)
+
 newtype Reader r a = Reader (r -> a)
+
+derive instance newtypeReader :: Newtype (Reader r a) _
 
 runReader :: forall r a. Reader r a -> r -> a
 runReader (Reader f) = f
@@ -29,15 +33,19 @@ bindR (Reader a) k = Reader \ r -> runReader (k (a r)) r
 infixl 1 bindR as >>-
 
 instance functorReader :: Functor (Reader r) where
+  map :: forall a b. (a -> b) -> Reader r a -> Reader r b
   map f (Reader a) = Reader (f <<< a)
 
 instance applyReader :: Apply (Reader r) where
+  apply :: forall a b. Reader r (a -> b) -> Reader r a -> Reader r b
   apply (Reader f) (Reader a) = Reader \ r -> f r (a r)
 
 instance applicativeReader :: Applicative (Reader r) where
+  pure :: forall a . a -> Reader r a
   pure a = Reader \ _ -> a
 
 instance bindReader :: Bind (Reader r) where
+  bind :: forall a b. Reader r a -> (a -> Reader r b) -> Reader r b
   bind (Reader a) k = Reader \ r -> runReader (k (a r)) r
 
 instance monadReader :: Monad (Reader r)

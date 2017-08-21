@@ -5,6 +5,7 @@ import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log, logShow)
 import Control.Monad.Rec.Class (Step(..))
+import Control.Monad.Transformerless.Cont as Cont
 import Control.Monad.Transformerless.RWS as RWS
 import Control.Monad.Transformerless.Reader as Reader
 import Control.Monad.Transformerless.State as State
@@ -20,12 +21,14 @@ loop n = RWS.tailRec_ go n where
     RWS.pure_ (Done unit)
       where
         bind = RWS.bind_
+        discard = RWS.bind_
   go m = do
     x <- RWS.get
     RWS.put (x + 1)
     RWS.pure_ (Loop (m - 1))
       where
         bind = RWS.bind_
+        discard = RWS.bind_
 
 loopState :: Int -> State.State Int Unit
 loopState n = State.tailRecS go n where
@@ -36,6 +39,7 @@ loopState n = State.tailRecS go n where
     State.pureS (Loop (m - 1))
       where
         bind = State.bindS
+        discard = State.bindS
 
 testRWS :: forall e. Eff (console :: CONSOLE | e) Unit
 testRWS = do
@@ -88,9 +92,19 @@ testWriter = case Writer.runWriter writerTest of
     log output
     logShow value
 
+contTest :: forall r. Cont.Cont r Int
+contTest = Cont.callCC \ return -> do
+  let n = 5
+  return n :: Cont.Cont r Unit
+  pure 15
+
+testCont :: forall e. Eff (console :: CONSOLE | e) Unit
+testCont = Cont.runCont contTest logShow
+
 main :: forall e. Eff (console :: CONSOLE | e) Unit
 main = do
   testReader
   testState
   testWriter
   testRWS
+  testCont

@@ -90,13 +90,13 @@ vs this transformerless code:
 loop :: Int -> RWS.RWS String (Array String) Int Unit
 loop n = RWS.tailRec_ go n where
   go 0 = do
-    RWS.tell ["Done!"]
+    _ <- RWS.tell ["Done!"]
     RWS.pure_ (Done unit)
       where
         bind = RWS.bind_
   go m = do
     x <- RWS.get
-    RWS.put (x + 1)
+    _ <- RWS.put (x + 1)
     RWS.pure_ (Loop (m - 1))
       where
         bind = RWS.bind_
@@ -107,12 +107,12 @@ with this javascript:
 var loop = function (n) {
     var go = function (v) {
         if (v === 0) {
-            return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Transformerless_RWS.bindRWS(Data_Semigroup.semigroupArray))(Control_Monad_Transformerless_RWS.tell([ "Done!" ]))(function () {
+            return Control_Monad_Transformerless_RWS.bind_(Data_Semigroup.semigroupArray)(Control_Monad_Transformerless_RWS.tell([ "Done!" ]))(function (v1) {
                 return Control_Monad_Transformerless_RWS.pure_(Data_Monoid.monoidArray)(new Control_Monad_Rec_Class.Done(Data_Unit.unit));
             });
         };
         return Control_Monad_Transformerless_RWS.bind_(Data_Semigroup.semigroupArray)(Control_Monad_Transformerless_RWS.get(Data_Monoid.monoidArray))(function (v1) {
-            return Control_Bind.discard(Control_Bind.discardUnit)(Control_Monad_Transformerless_RWS.bindRWS(Data_Semigroup.semigroupArray))(Control_Monad_Transformerless_RWS.put(Data_Monoid.monoidArray)(v1 + 1 | 0))(function () {
+            return Control_Monad_Transformerless_RWS.bind_(Data_Semigroup.semigroupArray)(Control_Monad_Transformerless_RWS.put(Data_Monoid.monoidArray)(v1 + 1 | 0))(function (v2) {
                 return Control_Monad_Transformerless_RWS.pure_(Data_Monoid.monoidArray)(new Control_Monad_Rec_Class.Loop(v - 1 | 0));
             });
         });

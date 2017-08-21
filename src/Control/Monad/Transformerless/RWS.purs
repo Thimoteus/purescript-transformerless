@@ -34,6 +34,7 @@ import Prelude
 
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRec)
 import Data.Monoid (class Monoid, mempty)
+import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..), fst, snd, uncurry)
 
 data RWSResult s a w = RWSResult s a w
@@ -48,6 +49,8 @@ rwriters :: forall s a w. RWSResult s a w -> w
 rwriters (RWSResult _ _ w) = w
 
 newtype RWS r w s a = RWS (r -> s -> RWSResult s a w)
+
+derive instance newtypeRWS :: Newtype (RWS r w s a) _
 
 runRWS :: forall r w s a. RWS r w s a -> r -> s -> RWSResult s a w
 runRWS (RWS f) = f
@@ -120,11 +123,13 @@ tailRec_ f a = RWS \ r s -> tailRec (k' r) (RWSResult s a mempty)
              Done y -> Done (RWSResult st' y (wr <> wr'))
 
 instance functorRWS :: Functor (RWS r w s) where
+  map :: forall a b. (a -> b) -> RWS r w s a -> RWS r w s b
   map f (RWS g) = RWS \ r s ->
     let res = g r s
      in RWSResult (rwstate res) (f (resultws res)) (rwriters res)
 
 instance applyRWS :: Semigroup w => Apply (RWS r w s) where
+  apply :: forall a b. RWS r w s (a -> b) -> RWS r w s a -> RWS r w s b
   apply (RWS ff) (RWS fa) = RWS \ r s ->
     let res = ff r s
         f = resultws res
@@ -138,9 +143,11 @@ instance applyRWS :: Semigroup w => Apply (RWS r w s) where
      in RWSResult s'' b w''
 
 instance applicativeRWS :: Monoid w => Applicative (RWS r w s) where
+  pure :: forall a. a -> RWS r w s a
   pure a = RWS \ r s -> RWSResult s a mempty
 
 instance bindRWS :: Semigroup w => Bind (RWS r w s) where
+  bind :: forall a b. RWS r w s a -> (a -> RWS r w s b) -> RWS r w s b
   bind (RWS fa) k = RWS \ r s ->
     let res = fa r s
         a = resultws res
@@ -155,6 +162,7 @@ instance bindRWS :: Semigroup w => Bind (RWS r w s) where
 instance monadRWS :: Monoid w => Monad (RWS r w s)
 
 instance monadRecRWS :: Monoid w => MonadRec (RWS r w s) where
+  tailRecM :: forall a b. (a -> RWS r w s (Step a b)) -> a -> RWS r w s b
   tailRecM f a = RWS \ r s -> tailRec (k' r) (RWSResult s a mempty)
     where
     k' r (RWSResult st res wr) =
