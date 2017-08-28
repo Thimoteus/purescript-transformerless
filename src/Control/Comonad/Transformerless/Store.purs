@@ -25,7 +25,7 @@ store = Store
 -- | Law: peek (pos x) x = extract x
 -- | Proof:
 -- | RHS := extract (f, s) = f s
--- | LHS := peek (pos (f, s)) (f, s) = 
+-- | LHS := peek (pos (f, s)) (f, s) =
 -- | peek s (f, s) =
 -- | peek s (f, _) = f s
 peek :: forall s a. s -> Store s a -> a
@@ -72,6 +72,18 @@ instance functorStore :: Functor (Store s) where
   map :: forall a b. (a -> b) -> Store s a -> Store s b
   map f (Store (Tuple g s)) = Store (Tuple (f <<< g) s)
 
+-- | Law: extend f <<< extend g = extend (f <<< extend g)
+-- | Proof:
+-- | RHS := extend (\ x -> f (extend g x)) y =
+-- | extend (\ x -> f (extend g (sx, s))) (s'y, s') =
+-- | extend (\ x -> f (\ t -> g (sx, s), s)) (s'y, s') =
+-- | (\ t' -> (\ x -> f (\ t -> g (sx, s), s)) (s'y, s'), s')
+-- | LHS := (extend f <<< extend g) y =
+-- | extend f (extend g y) =
+-- | extend f (extend g (sy, s)) =
+-- | extend f (\ s' -> g (sy, s), s) =
+-- | (\ t -> f (\ s' -> g (sy, s), s) , s) =
+-- | TODO: finish this
 instance extendStore :: Extend (Store s) where
   extend :: forall a b s. (Store s a -> b) -> Store s a -> Store s b
   extend f st@(Store (Tuple _ s)) = Store (Tuple (\ s' -> f st) s)
