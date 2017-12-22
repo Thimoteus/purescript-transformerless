@@ -33,12 +33,12 @@ store :: forall s a. Tuple (s -> a) s -> Store s a
 peek :: forall s a. s -> Store s a -> a
 ```
 
-Law: peek (pos x) x = extract x
-Proof:
-RHS := extract (f, s) = f s
-LHS := peek (pos (f, s)) (f, s) = 
-peek s (f, s) =
-peek s (f, _) = f s
+1. Law: peek (pos x) x = extract x
+2. Proof:
+3. RHS := extract (f, s) = f s
+4. LHS := peek (pos (f, s)) (f, s) =
+5. peek s (f, s) =
+6. peek s (f, _) = f s
 
 #### `pos`
 
@@ -46,11 +46,11 @@ peek s (f, _) = f s
 pos :: forall s a. Store s a -> s
 ```
 
-Law: pos (extend _ x) = pos x
-Proof:
-RHS := pos (_, s)
-LHS := pos (extend _ (f, s)) =
-pos (extend _ (_, s)) =
-pos (_, s)
+1. Law: pos (extend _ x) = pos x
+2. Proof:
+3. RHS := pos (_, s)
+4. LHS := pos (extend _ (f, s)) =
+5. pos (extend _ (_, s)) =
+6. pos (_, s)
 
 

@@ -26,20 +26,20 @@ runTraced (Traced f) = f
 traced :: forall m a. (m -> a) -> Traced m a
 traced = Traced
 
--- | Law: track mempty = extract
--- | Proof:
--- | First, rewrite as: track mempty f = extract f
--- | RHS := f mempty
--- | LHS := f mempty
--- | Law: (track s =<= track t) x = track (s <> t) x
--- | Proof:
--- | RHS := track (s <> t) x = x (s <> t)
--- | LHS := composeCoKliesliFlipped (track s) (track t) x =
--- | track s (track t <<= x) =
--- | track s (extend (track t) x) =
--- | track s (\ t' -> (track t) \ t'' -> x (t' <> t'')) =
--- | track s (\ t' -> x (t' <> t)) =
--- | x (s <> t)
+-- | 1. Law: track mempty = extract
+-- | 2. Proof:
+-- | 3. First, rewrite as: track mempty f = extract f
+-- | 4. RHS := f mempty
+-- | 5. LHS := f mempty
+-- | 6. Law: (track s =<= track t) x = track (s <> t) x
+-- | 7. Proof:
+-- | 8. RHS := track (s <> t) x = x (s <> t)
+-- | 9. LHS := composeCoKliesliFlipped (track s) (track t) x =
+-- | 10. track s (track t <<= x) =
+-- | 11. track s (extend (track t) x) =
+-- | 12. track s (\ t' -> (track t) \ t'' -> x (t' <> t'')) =
+-- | 13. track s (\ t' -> x (t' <> t)) =
+-- | 14. x (s <> t)
 track :: forall a m. Monoid m => m -> Traced m a -> a
 track m (Traced f) = f m
 
@@ -59,32 +59,32 @@ instance functorTraced :: Functor (Traced m) where
   map :: forall a b m. (a -> b) -> Traced m a -> Traced m b
   map f (Traced g) = Traced \ x -> f (g x)
 
--- | Law: extend f <<< extend g = extend (f <<< extend g)
--- | Proof:
--- | Rewrite pointfully:
--- | (extend f <<< extend g) x = extend (f <<< extend g) x
--- | LHS := extend f (extend g x) =
--- | extend f (\ t -> g \ t' -> x (t <> t')) =
--- | \ s -> f (\ s' -> (\ t -> g \ t' -> x (t <> t')) (s <> s')) =
--- | \ s -> f (\ s' -> g \ t' -> x (s <> s' <> t'))
--- | RHS := \ s -> (f <<< extend g) (\ s' -> x (s <> s')) =
--- | \ s -> (\ y -> f (extend g y)) (\ s' -> x (s <> s')) =
--- | \ s -> (\ y -> f (\ t -> g (\ t' -> y (t <> t')))) (\ s' -> x (s <> s')) =
--- | \ s -> f (\ t -> g (\ t' -> (\ s' -> x (s <> s')) (t <> t'))) =
--- | \ s -> f (\ t -> g (\ t' -> x (s <> t <> t'))) = (via renaming)
--- | \ s -> f (\ s' -> g \ t' -> x (s <> s' <> t'))
+-- | 1. Law: extend f <<< extend g = extend (f <<< extend g)
+-- | 2. Proof:
+-- | 3. Rewrite pointfully:
+-- | 4. (extend f <<< extend g) x = extend (f <<< extend g) x
+-- | 5. LHS := extend f (extend g x) =
+-- | 6. extend f (\ t -> g \ t' -> x (t <> t')) =
+-- | 7. \ s -> f (\ s' -> (\ t -> g \ t' -> x (t <> t')) (s <> s')) =
+-- | 8. \ s -> f (\ s' -> g \ t' -> x (s <> s' <> t'))
+-- | 9. RHS := \ s -> (f <<< extend g) (\ s' -> x (s <> s')) =
+-- | 10. \ s -> (\ y -> f (extend g y)) (\ s' -> x (s <> s')) =
+-- | 11. \ s -> (\ y -> f (\ t -> g (\ t' -> y (t <> t')))) (\ s' -> x (s <> s')) =
+-- | 12. \ s -> f (\ t -> g (\ t' -> (\ s' -> x (s <> s')) (t <> t'))) =
+-- | 13. \ s -> f (\ t -> g (\ t' -> x (s <> t <> t'))) = (via renaming)
+-- | 14. \ s -> f (\ s' -> g \ t' -> x (s <> s' <> t'))
 instance extendTraced :: Semigroup m => Extend (Traced m) where
   extend :: forall b a. (Traced m a -> b) -> Traced m a -> Traced m b
   extend f (Traced g) = Traced \ t -> f (Traced \ t' -> g (t <> t'))
 
--- | Law: extract <<= xs = xs
--- | Proof:
--- | RHS := \ x -> s
--- | LHS := extend extract (\ x -> s) =
--- | \ t -> extract (\ t' -> (\ x -> s) (t <> t')) =
--- | \ t -> (\ x -> s) (t <> mempty) =
--- | \ t -> (\ x -> s) t =
--- | \ x -> s
+-- | 1. Law: extract <<= xs = xs
+-- | 2. Proof:
+-- | 3. RHS := \ x -> s
+-- | 4. LHS := extend extract (\ x -> s) =
+-- | 5. \ t -> extract (\ t' -> (\ x -> s) (t <> t')) =
+-- | 6. \ t -> (\ x -> s) (t <> mempty) =
+-- | 7. \ t -> (\ x -> s) t =
+-- | 8. \ x -> s
 instance comonadTraced :: Monoid m => Comonad (Traced m) where
   extract :: forall a. Traced m a -> a
   extract (Traced f) = f mempty

@@ -33,20 +33,20 @@ traced :: forall m a. (m -> a) -> Traced m a
 track :: forall a m. Monoid m => m -> Traced m a -> a
 ```
 
-Law: track mempty = extract
-Proof:
-First, rewrite as: track mempty f = extract f
-RHS := f mempty
-LHS := f mempty
-Law: (track s =<= track t) x = track (s <> t) x
-Proof:
-RHS := track (s <> t) x = x (s <> t)
-LHS := composeCoKliesliFlipped (track s) (track t) x =
-track s (track t <<= x) =
-track s (extend (track t) x) =
-track s (\ t' -> (track t) \ t'' -> x (t' <> t'')) =
-track s (\ t' -> x (t' <> t)) =
-x (s <> t)
+1. Law: track mempty = extract
+2. Proof:
+3. First, rewrite as: track mempty f = extract f
+4. RHS := f mempty
+5. LHS := f mempty
+6. Law: (track s =<= track t) x = track (s <> t) x
+7. Proof:
+8. RHS := track (s <> t) x = x (s <> t)
+9. LHS := composeCoKliesliFlipped (track s) (track t) x =
+10. track s (track t <<= x) =
+11. track s (extend (track t) x) =
+12. track s (\ t' -> (track t) \ t'' -> x (t' <> t'')) =
+13. track s (\ t' -> x (t' <> t)) =
+14. x (s <> t)
 
 #### `tracks`
 

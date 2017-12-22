@@ -1,12 +1,5 @@
 ## Module Control.Monad.Transformerless.RWS
 
-#### `RWSResult`
-
-``` purescript
-data RWSResult s a w
-  = RWSResult s a w
-```
-
 #### `RWS`
 
 ``` purescript
@@ -23,6 +16,13 @@ Functor (RWS r w s)
 (Semigroup w) => Bind (RWS r w s)
 (Monoid w) => Monad (RWS r w s)
 (Monoid w) => MonadRec (RWS r w s)
+```
+
+#### `RWSResult`
+
+``` purescript
+data RWSResult s a w
+  = RWSResult s a w
 ```
 
 #### `runRWS`

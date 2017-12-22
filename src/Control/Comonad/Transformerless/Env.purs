@@ -44,39 +44,39 @@ instance functorEnv :: Functor (Env e) where
   map :: forall a b. (a -> b) -> Env e a -> Env e b
   map f (Env (Tuple e a)) = Env (Tuple e (f a))
 
--- | Law: extend f <<< extend g = extend (f <<< extend g)
--- | Proof:
--- | First, rewrite in pointful form:
--- | (extend f <<< extend g) x = extend (f <<< extend g) x
--- | RHS := extend (f <<< extend g) x =
--- | extend (\ y -> f (extend g y)) x =
--- | extend (\ (y1, y2) -> f (extend g (y1, y2))) (x1, x2) =
--- | extend (\ (y1, y2) -> f (y1, g (y1, y2))) (x1, x2) =
--- | (x1, (\ (y1, y2) -> f (y1, g (y1, y2))) (x1, x2)) =
--- | (x1, f (x1, g (x1, x2)))
--- | LHS := (\ y -> extend f (extend g y)) x =
--- | (\ (y1, y2) -> extend f (extend g (y1, y2))) (x1, x2) =
--- | (\ (y1, y2) -> extend f (y1, g (y1, y2))) (x1, x2) =
--- | (\ (y1, y2) -> (y1, f (y1, g (y1, y2)))) (x1, x2) =
--- | (x1, f (x1, g (x1, x2)))
+-- | 1. Law: extend f <<< extend g = extend (f <<< extend g)
+-- | 2. Proof:
+-- | 3. First, rewrite in pointful form:
+-- | 4. (extend f <<< extend g) x = extend (f <<< extend g) x
+-- | 5. RHS := extend (f <<< extend g) x =
+-- | 6. extend (\ y -> f (extend g y)) x =
+-- | 7. extend (\ (y1, y2) -> f (extend g (y1, y2))) (x1, x2) =
+-- | 8. extend (\ (y1, y2) -> f (y1, g (y1, y2))) (x1, x2) =
+-- | 9. (x1, (\ (y1, y2) -> f (y1, g (y1, y2))) (x1, x2)) =
+-- | 10. (x1, f (x1, g (x1, x2)))
+-- | 11. LHS := (\ y -> extend f (extend g y)) x =
+-- | 12. (\ (y1, y2) -> extend f (extend g (y1, y2))) (x1, x2) =
+-- | 13. (\ (y1, y2) -> extend f (y1, g (y1, y2))) (x1, x2) =
+-- | 14. (\ (y1, y2) -> (y1, f (y1, g (y1, y2)))) (x1, x2) =
+-- | 15. (x1, f (x1, g (x1, x2)))
 instance extendEnv :: Extend (Env e) where
   extend :: forall b a. (Env e a -> b) -> Env e a -> Env e b
   extend k en@(Env (Tuple e _)) = Env (Tuple e (k en))
 
--- | Law: extract <<= xs = xs
--- | Proof:
--- | LHS := extend extract xs =
--- | extend extract (x1, x2) =
--- | (x1, extract (x1, x2)) =
--- | (x1, x2)
--- | RHS := (x1, x2)
--- | Law: extract (f <<= xs) = f xs
--- | Proof:
--- | LHS := extract (extend f xs) =
--- | extract (extend f (x1, x2)) =
--- | extract (x1, f (x1, x2)) =
--- | f (x1, x2)
--- | RHS := f (x1, x2)
+-- | 1. Law: extract <<= xs = xs
+-- | 2. Proof:
+-- | 3. LHS := extend extract xs =
+-- | 4. extend extract (x1, x2) =
+-- | 5. (x1, extract (x1, x2)) =
+-- | 6. (x1, x2)
+-- | 7. RHS := (x1, x2)
+-- | 8. Law: extract (f <<= xs) = f xs
+-- | 9. Proof:
+-- | 10. LHS := extract (extend f xs) =
+-- | 11. extract (extend f (x1, x2)) =
+-- | 12. extract (x1, f (x1, x2)) =
+-- | 13. f (x1, x2)
+-- | 14. RHS := f (x1, x2)
 instance comonadEnv :: Comonad (Env e) where
   extract :: forall a. Env e a -> a
   extract (Env (Tuple _ a)) = a
