@@ -2,6 +2,7 @@ module Control.Monad.Transformerless.State where
 
 import Prelude
 
+import Control.Alt (class Alt)
 import Control.Lazy (class Lazy)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRec)
 import Data.Newtype (class Newtype)
@@ -77,6 +78,9 @@ instance applyState :: Apply (State s) where
 instance applicativeState :: Applicative (State s) where
   pure :: forall a. a -> State s a
   pure a = State (Tuple a)
+
+instance altState :: Alt (State s) where
+  alt f _ = f
 
 instance bindState :: Bind (State s) where
   bind :: forall a b. State s a -> (a -> State s b) -> State s b
