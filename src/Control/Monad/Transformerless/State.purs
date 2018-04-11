@@ -51,7 +51,7 @@ bindS (State fa) k = State \ s ->
 infixl 1 bindS as >>-
 
 deferS :: forall s a. (Unit -> State s a) -> State s a
-deferS f = State (runState (f unit))
+deferS f = State \ s -> case f unit of State f' -> f' s
 
 tailRecS :: forall s a b. (a -> State s (Step a b)) -> a -> State s b
 tailRecS f a = State \ s -> tailRec f' (Tuple a s)
@@ -93,7 +93,7 @@ instance monadState :: Monad (State s)
 
 instance lazyState :: Lazy (State s a) where
   defer :: (Unit -> State s a) -> State s a
-  defer f = State (runState (f unit))
+  defer f = State \ s -> case f unit of State f' -> f' s
 
 instance monadrecState :: MonadRec (State s) where
   tailRecM :: forall a b. (a -> State s (Step a b)) -> a -> State s b

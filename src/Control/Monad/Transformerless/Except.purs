@@ -47,6 +47,9 @@ instance alternativeExcept :: Monoid e => Alternative (Except e)
 instance monadZeroExcept :: Monoid e => MonadZero (Except e)
 instance monadPlusExcept :: Monoid e => MonadPlus (Except e)
 
+instance showExcept :: (Show e, Show a) => Show (Except e a) where
+  show (Except a) = "(Except " <> show a <> ")"
+
 -- | The `Alt` instance differs from that belonging to the underlying `Either`
 -- | in that this version collects errors.
 instance altExcept :: Semigroup e => Alt (Except e) where
