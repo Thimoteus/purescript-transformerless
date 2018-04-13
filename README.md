@@ -1,6 +1,6 @@
 # purescript-transformerless
 
-Implementations of monad transformers without using transformers.
+Implementations of some useful types currently implemented using monad transformers, but now without using transformers.
 
 - `Env e a`
 - `Store s a`
