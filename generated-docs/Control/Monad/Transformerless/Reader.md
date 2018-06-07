@@ -3,18 +3,7 @@
 #### `Reader`
 
 ``` purescript
-newtype Reader r a
-  = Reader (r -> a)
-```
-
-##### Instances
-``` purescript
-Newtype (Reader r a) _
-Functor (Reader r)
-Apply (Reader r)
-Applicative (Reader r)
-Bind (Reader r)
-Monad (Reader r)
+type Reader r = Function r
 ```
 
 #### `runReader`

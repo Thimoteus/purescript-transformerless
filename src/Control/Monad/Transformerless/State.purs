@@ -62,6 +62,13 @@ tailRecS f a = State \ s -> tailRec f' (Tuple a s)
          Loop l -> Loop (Tuple l s1)
          Done r -> Done (Tuple r s1)
 
+-- | This satisfies associativity and `get <<< x` = `x <<< get`, but neither is the same as `x`.
+-- | This is because composition of two `State`s uses neither in the
+-- | computation of the final state.
+instance semigroupoidState :: Semigroupoid State where
+  compose :: forall a b c. State b c -> State a b -> State a c
+  compose (State bc) (State ab) = State \ a -> Tuple (fst (bc (fst (ab a)))) a
+
 instance functorState :: Functor (State s) where
   map :: forall a b. (a -> b) -> State s a -> State s b
   map f (State s) = State \ st ->

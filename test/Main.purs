@@ -2,8 +2,6 @@ module Test.Main where
 
 import Prelude
 
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (CONSOLE, log, logShow)
 import Control.Monad.Rec.Class (Step(..))
 import Control.Monad.Transformerless.Cont as Cont
 import Control.Monad.Transformerless.RWS as RWS
@@ -11,8 +9,10 @@ import Control.Monad.Transformerless.Reader as Reader
 import Control.Monad.Transformerless.State as State
 import Control.Monad.Transformerless.Writer as Writer
 import Data.Tuple (Tuple(..))
+import Effect (Effect)
+import Effect.Console (log, logShow)
 
-foreign import t :: forall eff. Eff eff Number
+foreign import t :: Effect Number
 
 loop :: Int -> RWS.RWS String (Array String) Int Unit
 loop n = RWS.tailRec_ go n where
@@ -41,21 +41,21 @@ loopState n = State.tailRecS go n where
         bind = State.bindS
         discard = State.bindS
 
-testRWS :: forall e. Eff (console :: CONSOLE | e) Unit
+testRWS :: Effect Unit
 testRWS = do
   t1 <- t
-  let res1 = RWS.runRWS (loop 10000000) "" 0
+  let res1 = RWS.runRWS (loop 1000000) "" 0
   t2 <- t
   log $ "RWS: " <> show (t2 - t1)
   t3 <- t
-  let res2 = State.execState (loopState 10000000) 0
+  let res2 = State.execState (loopState 1000000) 0
   t4 <- t
   log $ "State: " <> show (t4 - t3)
 
 readerTest :: Reader.Reader String String
 readerTest = Reader.local (_ <> "!") Reader.ask
 
-testReader :: forall e. Eff (console :: CONSOLE | e) Unit
+testReader :: Effect Unit
 testReader = log $ Reader.runReader readerTest "Done"
 
 incState :: State.State Int Unit
@@ -73,7 +73,7 @@ stateTest = do
     where
       bind = State.bindS
 
-testState :: forall e. Eff (console :: CONSOLE | e) Unit
+testState :: Effect Unit
 testState = case State.runState stateTest 0 of
   Tuple value state -> do
     log $ "state: " <> show state
@@ -86,7 +86,7 @@ writerTest = do
     where
       bind = Writer.bindW
 
-testWriter :: forall e. Eff (console :: CONSOLE | e) Unit
+testWriter :: Effect Unit
 testWriter = case Writer.runWriter writerTest of
   Tuple value output -> do
     log output
@@ -98,10 +98,10 @@ contTest = Cont.callCC \ return -> do
   return n :: Cont.Cont r Unit
   pure 15
 
-testCont :: forall e. Eff (console :: CONSOLE | e) Unit
+testCont :: Effect Unit
 testCont = Cont.runCont contTest logShow
 
-main :: forall e. Eff (console :: CONSOLE | e) Unit
+main :: Effect Unit
 main = do
   testReader
   testState

@@ -5,7 +5,7 @@ import Prelude
 type Reader r = Function r
 
 runReader :: forall r a. Reader r a -> r -> a
-runReader = id
+runReader = identity
 
 withReader :: forall r1 r2 a. (r2 -> r1) -> Reader r1 a -> Reader r2 a
 withReader = (>>>)
@@ -32,4 +32,4 @@ local :: forall r a. (r -> r) -> Reader r a -> Reader r a
 local = (>>>)
 
 ask :: forall r. Reader r r
-ask = id
+ask = identity

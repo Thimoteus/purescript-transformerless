@@ -14,7 +14,6 @@ import Data.Either (Either(..), either)
 import Data.Eq (class Eq1)
 import Data.Foldable (class Foldable)
 import Data.Functor.Invariant (class Invariant)
-import Data.Monoid (class Monoid, mempty)
 import Data.Newtype (class Newtype, over)
 import Data.Ord (class Ord1)
 import Data.Traversable (class Traversable)
@@ -40,7 +39,7 @@ derive newtype instance foldableExcept :: Foldable (Except e)
 derive newtype instance bifoldableExcept :: Bifoldable Except
 derive newtype instance traversableExcept :: Traversable (Except e)
 derive newtype instance bitraversableExcept :: Bitraversable Except
-derive newtype instance semiringExcept :: Semiring a => Semiring (Except e a)
+-- derive newtype instance semiringExcept :: Semiring a => Semiring (Except e a)
 derive newtype instance semigroupExcept :: Semigroup a => Semigroup (Except e a)
 
 instance alternativeExcept :: Monoid e => Alternative (Except e)

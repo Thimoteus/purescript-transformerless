@@ -10,9 +10,11 @@ newtype State s a
 ##### Instances
 ``` purescript
 Newtype (State s a) _
+Semigroupoid State
 Functor (State s)
 Apply (State s)
 Applicative (State s)
+Alt (State s)
 Bind (State s)
 Monad (State s)
 Lazy (State s a)
