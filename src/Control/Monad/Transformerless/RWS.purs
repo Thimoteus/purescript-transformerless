@@ -33,7 +33,6 @@ module Control.Monad.Transformerless.RWS
 import Prelude
 
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRec)
-import Data.Monoid (class Monoid, mempty)
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..), fst, snd, uncurry)
 

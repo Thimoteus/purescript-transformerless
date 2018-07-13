@@ -12,7 +12,6 @@ module Control.Comonad.Transformerless.Traced
 import Prelude
 
 import Control.Comonad (class Comonad, class Extend)
-import Data.Monoid (class Monoid, mempty)
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..))
 

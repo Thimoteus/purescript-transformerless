@@ -2,7 +2,6 @@ module Control.Monad.Transformerless.Writer where
 
 import Prelude
 
-import Data.Monoid (class Monoid, mempty)
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(Tuple))
 
