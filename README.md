@@ -1,35 +1,43 @@
 # purescript-transformerless
 
-## Why?
-In Haskell and Purescript, the standard `Writer`, `Reader`, `State` and `RWS`
+Implementations of some useful types currently implemented using monad transformers, but now without using transformers.
+
+- `Env e a`
+- `Store s a`
+- `Traced m a`
+- `Cont r a`
+- `Except e a`
+- `RWS r w s a`
+- `Reader r`
+- `State s a`
+- `Writer w a`
+
+## Motivation
+
+In Haskell and PureScript, the standard `Writer`, `Reader`, `State` and `RWS`
 monads are implemented in terms of their monad *transformer* versions over the
-`Identity` monad. Depending on how you learned about monad transformers, you might
-remember reading something like the following:
+`Identity` monad. For example, `type State s = StateT s Identity`.
 
-> The State/Reader/Writer monad is ...
->
-> A monad transformer is ...
->
-> The StateT/ReaderT/WriterT monad transformer is ...
->
-> In fact, the State/Reader/Writer monad from section {3 lines ago} is actually
-defined as StateT s Identity/ReaderT r Identity/WriterT w Identity!
+While this is theoretically clean, it's "common knowledge" among
+PureScripters that transformer stacks are slow and generate some funky JavaScript.
+This project provides implementions of these types without using transformers.
 
-Wow, what a plot twist!
-
-However, for all the theoretical cleanliness, it's "common knowledge" among
-Purescripters that transformer stacks are slow and generate some funky Javascript.
+If you want these types but don't want to wrap an existing monad, this project is for you.
+Alternatively, if you want these types but need faster performance than the transformer
+implementation, this project is for you.
 
 ## Usage
 
-The same as a normal `State`, `Reader`, etc. However, you should know that
-none of these types have instances for their respective transformer counterparts:
-there is no instance for `..State.Class.MonadState s (..Transformerless.State s)`
-or its buddies. Wouldn't it be weird for a package called "transformerless" to
-depend on a package called "transformers"?
+Use these exactly as you would use their transformer counterparts.
 
-As a result, a "transformers" typeclass function is just a normal function in
-the transformerless counterpart's module.
+It's important to note, however, that the types in this project don't have instances of typeclasses,
+like their transformer counterparts. For example, `Control.Monad.Transformerless.State s` does not
+have an instance of `Control.Monad.State.Class.MonadState s`. Wouldn't it be weird for a package
+called "transformerless" to depend on a package called "transformers"?
+
+As a result, a function using a transformers typeclass is just a normal function in
+the transformerless counterpart's module. For example, `get :: forall m s. MonadState s m => m s`
+in transformers is `get :: forall s. State s s` in transformerless.
 
 ## Scrap Your Typeclasses
 
@@ -40,7 +48,7 @@ each typeclass instance in the module.
 as well as infix aliases `|->, ~, >>-` for `mapR, applyR, bindR` respectively.
 
 `Writer` and `State` are similar, but `RWS` exports `map_, apply_, pure_, bind_`.
-However, the aliases are the same in each module.
+While the function names in these modules are slightly different, the aliases are the same.
 
 Using these instead of their overloaded versions avoids passing typeclass
 dictionaries, and could result in a speedup.
